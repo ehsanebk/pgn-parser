@@ -99,7 +99,7 @@ public class PGNParser {
 	 * @throws NullPointerException 
 	 */
 	public static List<PGNGame> parse(String pgn) throws PGNParseException, IOException, NullPointerException, MalformedMoveException {
-		System.out.println();
+		//System.out.println();
 		List<PGNGame> games = new LinkedList<PGNGame>();
 		List<String> pgnSources = PGNParser.splitPGN(pgn);
 		
@@ -181,6 +181,7 @@ public class PGNParser {
 
 		String[] pairs = buffer.toString().split("\\s*\\d+\\.+\\s*");
 		
+		
 		for (String pair : pairs) {
 			if (pair.isEmpty()) {
 				continue;
@@ -222,6 +223,8 @@ public class PGNParser {
 			
 			try {
 				handleRawMoves(rawMoves, game, board, color);
+				
+				
 			} catch (PGNParseException e) {
 				throw new PGNParseException(game.toString(), e);
 			}
@@ -241,15 +244,16 @@ public class PGNParser {
 	 */
 	private static void handleRawMoves(String[] rawMoves, PGNGame game, byte[][] board, int[] color) throws MalformedMoveException, PGNParseException, NullPointerException {
 		PGNMove move = null;
-		
+		File PGNStage =new File("PGNStage.txt");
 		//printBoard(board);
-		//System.out.println(rawMoves[1] +"\n");
+		//System.out.println( rawMoves.length);
 		
 		for (int i = 0; i < rawMoves.length; i++) {
+			
 			if (rawMoves[i].equals("e.p.")) {
 				continue;
 			} else if (rawMoves[i].startsWith("{") && rawMoves[i].endsWith("}")) {
-				move.setComment(rawMoves[i].substring(1, rawMoves[i].length() - 1));
+				//move.setComment(rawMoves[i].substring(1, rawMoves[i].length() - 1));
 			} else {
 				if (validateMove(move = new PGNMove(rawMoves[i]))) {
 					
@@ -258,22 +262,18 @@ public class PGNParser {
 					} else {
 						move.setColor(Color.black);
 					}
-					//System.out.println(move.getMove());
 					
+					// code for importing the stage and the move to the file 
+					//printBoard(board);
+					String stage = boardToStage (board, move);
+					move.setStage(stage);
+					
+					//stageToFile(board, rawMoves[i], move, PGNStage);
 					
 					game.addMove(move);
-					// code for importing the stage and the move to the file 
-					
-					
-					File PGNStage =new File("PGNStage.txt");
-					stageToFile(board, move, PGNStage);
-					
-					
-					
 					
 					
 					updateNextMove(move, board);
-					//printBoard(board);
 					switchColor(color);
 				} else {
 					throw new PGNParseException(move.getFullMove());
@@ -284,13 +284,13 @@ public class PGNParser {
 	
 	
 
-	private static void stageToFile(byte[][] board, PGNMove move, File file) {
+	private static void stageToFile(byte[][] board, String rawMove,PGNMove move, File file) {
 		
 //		printBoard(board);
-//		System.out.println(move.getMove());
 //		System.out.println(move.getColor());
 		String stage = boardToStage (board, move);  
 		System.out.println(stage);
+		
 		try {
 			  
 			// if file doesnt exists, then create it
@@ -298,7 +298,7 @@ public class PGNParser {
 				file.createNewFile();
 				FileWriter fw = new FileWriter(file.getAbsoluteFile());
 				BufferedWriter bw = new BufferedWriter(fw);
-				bw.write("test1");
+				bw.write("<" + stage + ">" +"\t" +"<" +  rawMove+">" );
 				bw.close();
 				
 			}
@@ -320,9 +320,9 @@ public class PGNParser {
 		                String tokens[] = strLine.split("\t");
 		                
 		                
-		                if (tokens[0].equals("false")) {
+		                if (tokens[0].equals("<" +stage +">")) {
 		                	
-		                	String newLine = "test2";
+		                	String newLine = strLine + "\t" + "<" +rawMove + ">";
 		                	
 		                	list.add(newLine);
 	                        exist= true;
@@ -334,10 +334,10 @@ public class PGNParser {
 		            }
 		             
 		            if (exist == false){
-		            	list.add("test3");
+		            	list.add("<" + stage + ">" +"\t" +"<" +  rawMove+">");
 		            }
 		            
-		            Collections.sort(list , Collections.reverseOrder());
+		            //Collections.sort(list , Collections.reverseOrder());
 		            
 		            for(String val : list ){
 		            	fileContent.append(val);	
@@ -356,7 +356,7 @@ public class PGNParser {
 		            System.err.println("Error: " + e.getMessage());
 		        }
 			}
-			System.out.println("Done");
+			//System.out.println("Done");
  
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -364,6 +364,11 @@ public class PGNParser {
 		
 	}
 
+	// boardtostaeg is a function that returns the state of the chess board in 
+	//a string from the first column on the left to the right.
+	//It does not matter whether it's white move or black move it will put capital for your items 
+	//and lower case for the opponent.
+	
 	private static String boardToStage(byte[][] board, PGNMove move) {
 		String stage = "" ;
 		if ( move.getColor() == Color.white)
@@ -393,13 +398,14 @@ public class PGNParser {
 						stage = stage + "q";
 					else if (board[i][j] == BLACK_KING) 
 						stage = stage + "k";
-					else stage = stage + board[i][j];
+					else if (board[i][j] == 0 )
+						stage = stage + board[i][j];
 				}
 			}
 		}
-		else if ( move.getColor() == Color.white)
-		{	for (int i = board.length-1 ; i >= 0 ; i++) {
-				for (int j = 0; j < board[i].length; j++) {
+		else if ( move.getColor() == Color.black)
+		{	for (int i = board.length-1; i>= 0 ; i--) {
+				for (int j = board.length-1 ; j >= 0; j--) {
 					if (board[i][j] == WHITE_PAWN) 
 						stage = stage + "p";
 					else if (board[i][j] == WHITE_BISHOP) 
@@ -424,7 +430,8 @@ public class PGNParser {
 						stage = stage + "Q";
 					else if (board[i][j] == BLACK_KING) 
 						stage = stage + "K";
-					else stage = stage + board[i][j];
+					else if (board[i][j] == 0 )
+						stage = stage + board[i][j];
 				}
 			}
 		}
@@ -1208,7 +1215,6 @@ public class PGNParser {
 				}
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1258,7 +1264,7 @@ public class PGNParser {
 			System.out.println();
 		}
 		
-		System.out.println();
+		System.out.println("end of board");
 	}
 	
 }

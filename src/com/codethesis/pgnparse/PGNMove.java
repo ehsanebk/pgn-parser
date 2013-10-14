@@ -23,6 +23,7 @@ package com.codethesis.pgnparse;
  */
 public class PGNMove {
 
+	private String stage;
 	private String move;
 	private String fullMove;
 	private String fromSquare;
@@ -348,6 +349,14 @@ public class PGNMove {
 		}
 		
 		this.move = move;
+	}
+
+	public String getStage() {
+		return stage;
+	}
+
+	public void setStage(String stage) {
+		this.stage = stage;
 	}
 
 }
