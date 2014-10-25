@@ -1241,7 +1241,7 @@ public class PGNParser {
 	 * 
 	 * @return
 	 */
-	private static byte[][] createDefaultBoard() {
+	public static byte[][] createDefaultBoard() {
 		return new byte[][] {
 				{ WHITE_ROOK, WHITE_PAWN, EMPTY, EMPTY, EMPTY, EMPTY, BLACK_PAWN, BLACK_ROOK, },
 				{ WHITE_KNIGHT, WHITE_PAWN, EMPTY, EMPTY, EMPTY, EMPTY, BLACK_PAWN, BLACK_KNIGHT, },
